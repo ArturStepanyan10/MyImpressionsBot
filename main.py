@@ -1,16 +1,30 @@
-# This is a sample Python script.
+import asyncio
+import logging
+import os
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+from aiogram import Bot, Dispatcher
 
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+from config.config import Config, load_config
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+logger = logging.getLogger(__name__)
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+
+async def main():
+
+    logger.info("Starting bot...")
+
+    # Загружаем конфиг
+    config: Config = load_config()
+
+    # Инициализируем бот и диспетчер
+    bot = Bot(
+        token=config.bot.token,
+    )
+    dp = Dispatcher()
+
+    await bot.delete_webhook(drop_pending_updates=True)
+    await dp.start_polling(bot)
+
+
+asyncio.run(main())
