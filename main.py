@@ -4,25 +4,25 @@ import logging
 from aiogram import Bot, Dispatcher
 
 from config.config import Config, load_config
+from handlers import user_handler
 
 logger = logging.getLogger(__name__)
 
 
 async def main():
-
     logger.info("Starting bot...")
-
-    # Загружаем конфиг
+    print("Бот начал работу...")
     config: Config = load_config()
-
-    # Инициализируем бот и диспетчер
     bot = Bot(
         token=config.bot.token,
     )
     dp = Dispatcher()
 
+    dp.include_router(user_handler.router)
+
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 
 
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())
