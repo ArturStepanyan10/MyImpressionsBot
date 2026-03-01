@@ -1,11 +1,9 @@
 import asyncio
 import logging
-import os
 
 from aiogram import Bot, Dispatcher
 
 from config.config import Config, load_config
-
 
 logger = logging.getLogger(__name__)
 

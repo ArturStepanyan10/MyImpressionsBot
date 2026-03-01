@@ -5,7 +5,7 @@ from environs import Env
 
 @dataclass
 class TgBot:
-    token: str         # Токен для доступа к телеграм-боту
+    token: str  # Токен для доступа к телеграм-боту
 
 
 @dataclass
@@ -17,8 +17,4 @@ def load_config(path: str | None = None) -> Config:
     env: Env = Env()
     env.read_env(path)
 
-    return Config(
-        bot=TgBot(
-            token=env("BOT_TOKEN")
-        )
-    )
+    return Config(bot=TgBot(token=env("BOT_TOKEN")))
