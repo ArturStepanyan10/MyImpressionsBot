@@ -5,23 +5,31 @@ from aiogram import Bot, Dispatcher
 
 from config.config import Config, load_config
 from handlers import user_handler
+from logger.logging import setup_logging
 
-logger = logging.getLogger(__name__)
+setup_logging()
+logger = logging.getLogger("my_bot")
 
 
 async def main():
-    logger.info("Starting bot...")
-    print("Бот начал работу...")
-    config: Config = load_config()
-    bot = Bot(
-        token=config.bot.token,
-    )
-    dp = Dispatcher()
+    try:
+        logger.info("Бот запущен")
+        config: Config = load_config()
+        logger.info("Конфигурация загружена")
 
-    dp.include_router(user_handler.router)
+        bot = Bot(
+            token=config.bot.token,
+        )
+        dp = Dispatcher()
 
-    await bot.delete_webhook(drop_pending_updates=True)
-    await dp.start_polling(bot)
+        dp.include_router(user_handler.router)
+
+        await bot.delete_webhook(drop_pending_updates=True)
+        logger.info("Webhook удалён, запускаем polling")
+        await dp.start_polling(bot)
+    except Exception as e:
+        logger.exception("Ошибка при запуске бота s% - ", e)
+        raise
 
 
 if __name__ == "__main__":
