@@ -3,15 +3,19 @@ from aiogram.filters import CommandStart
 from aiogram.types import Message
 
 from keyboards.basic import category_kb
+from lexicon.lexicon import LEXICON_RU
 
 router = Router()
 
 
 @router.message(CommandStart())
 async def process_start_command(message: Message):
-    await message.answer(
-        "Приветствую тебя, дорогой пользователь!", reply_markup=category_kb
-    )
+    await message.answer(LEXICON_RU.get("/start"), reply_markup=category_kb)
+
+
+@router.message(F.text == "/help")
+async def process_help_command(message: Message):
+    await message.answer(LEXICON_RU.get("/help"))
 
 
 @router.message(F.text == "Категории")
