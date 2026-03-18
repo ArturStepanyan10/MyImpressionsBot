@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from sqlalchemy import (
     CheckConstraint,
     DateTime,
@@ -31,7 +29,7 @@ class Category(Base):
 
     title: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     user_id: Mapped[int] = mapped_column(
-        ForeignKey("user.id"), ondelete="CASCADE", nullable=False
+        ForeignKey("user.id", ondelete="CASCADE"), nullable=False
     )
 
 
@@ -45,7 +43,7 @@ class Item(Base):
     )
     image_url: Mapped[str] = mapped_column(Text)
     category_id: Mapped[int] = mapped_column(
-        ForeignKey("category.id"), ondelete="CASCADE", nullable=False
+        ForeignKey("category.id", ondelete="CASCADE"), nullable=False
     )
 
 
