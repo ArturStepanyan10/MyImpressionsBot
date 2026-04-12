@@ -1,10 +1,10 @@
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
-# Кнопка категории
+# Создаем объект кнопки
 button_category = KeyboardButton(text="Категории")
 
-# Инициализация билдер для клавиатуры с кнопкой "Категории"
+# Создаем объект клавиатуры, добавляя в него кнопки
 button_builder = ReplyKeyboardBuilder()
 
 # Добавляет кнопку в билдер
