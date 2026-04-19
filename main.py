@@ -2,15 +2,14 @@ import asyncio
 import logging
 
 from aiogram import Bot, Dispatcher
+from aiogram.fsm.storage.redis import RedisStorage
+from redis.asyncio import Redis
 
 from config.config import Config, load_config
 from database.engine import create_db, drop_db, session_maker
 from handlers import user_handler
 from logger.logging import setup_logging
 from middlewares.db_middleware import DataBaseSessionMiddleware
-from redis.asyncio import Redis
-from aiogram.fsm.storage.redis import RedisStorage
-
 
 setup_logging()
 logger = logging.getLogger("my_bot")
@@ -35,13 +34,13 @@ async def main():
         bot = Bot(
             token=config.bot.token,
         )
-        
+
         # Инициализируем Redis
         redis = Redis(host="localhost")
-        
+
         # Инициализируем хранилище
         storage = RedisStorage(redis=redis)
-        
+
         dp = Dispatcher(storage=storage)
         dp.startup.register(on_startup)
         dp.update.middleware(DataBaseSessionMiddleware(session_pool=session_maker))
