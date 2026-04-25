@@ -13,7 +13,7 @@ setup_logging()
 logger = logging.getLogger("my_bot")
 
 
-class DataBaseSessionMiddleware(BaseMiddleware):
+class DatabaseSessionUserMiddleware(BaseMiddleware):
     def __init__(self, session_pool: async_sessionmaker):
         self.session_pool = session_pool
 
