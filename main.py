@@ -9,7 +9,9 @@ from config.config import Config, load_config
 from database.engine import create_db, drop_db, session_maker
 from handlers import user_handler
 from logger.logging import setup_logging
-from middlewares.db_middleware import DataBaseSessionMiddleware
+from middlewares.db_middleware import DatabaseSessionUserMiddleware
+from aiogram.enums import ParseMode
+from aiogram.client.default import DefaultBotProperties
 
 setup_logging()
 logger = logging.getLogger("my_bot")
@@ -33,17 +35,20 @@ async def main():
 
         bot = Bot(
             token=config.bot.token,
+            default=DefaultBotProperties(
+                parse_mode=ParseMode.HTML
+            )
         )
 
         # Инициализируем Redis
-        redis = Redis(host="localhost")
+        redis = Redis(host="localhost", port=6380)
 
         # Инициализируем хранилище
         storage = RedisStorage(redis=redis)
 
         dp = Dispatcher(storage=storage)
         dp.startup.register(on_startup)
-        dp.update.middleware(DataBaseSessionMiddleware(session_pool=session_maker))
+        dp.update.middleware(DatabaseSessionUserMiddleware(session_pool=session_maker))
 
         dp.include_router(user_handler.router)
 
