@@ -12,9 +12,9 @@ add_category_inline_btn = InlineKeyboardButton(
 add_category_inline_keyboard = InlineKeyboardMarkup(inline_keyboard=[[add_category_inline_btn]])
 
 
-def get_category_inline_keyboard(categories):
+def get_category_inline_keyboard(categories, action: str):
     
-    categories_inline_btn = [InlineKeyboardButton(text=category.title, callback_data=f"category_{category.id}") 
+    categories_inline_btn = [InlineKeyboardButton(text=category.title, callback_data=f"{action}_category_{category.id}") 
                     for category in categories]
     
     return InlineKeyboardMarkup(inline_keyboard=[[btn] for btn in categories_inline_btn])
