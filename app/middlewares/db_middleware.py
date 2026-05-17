@@ -14,6 +14,13 @@ logger = logging.getLogger("my_bot")
 
 
 class DatabaseSessionUserMiddleware(BaseMiddleware):
+    """
+    Middleware для создания сессии БД на время обработки события.
+
+    Добавляет в data SQLAlchemy-сессию и актуального пользователя из БД,
+    создавая его при первом обращении из Telegram.
+    """
+
     def __init__(self, session_pool: async_sessionmaker):
         self.session_pool = session_pool
 
@@ -26,6 +33,8 @@ class DatabaseSessionUserMiddleware(BaseMiddleware):
         async with self.session_pool() as session:
             data["session"] = session
 
+            # В aiogram пользователь чаще уже лежит в data, но для части событий
+            # безопаснее дополнительно попробовать взять его напрямую из event.
             tg_user = data.get("event_from_user") or getattr(event, "from_user", None)
 
             if tg_user:
@@ -42,6 +51,8 @@ class DatabaseSessionUserMiddleware(BaseMiddleware):
                         username=tg_user.username or "",
                     )
                     session.add(db_user)
+                    # flush отправляет INSERT в БД до commit, чтобы объект получил
+                    # сгенерированные поля и был готов для хендлера в этом же событии.
                     await session.flush()
                 else:
                     db_user.name = tg_user.first_name
@@ -51,10 +62,11 @@ class DatabaseSessionUserMiddleware(BaseMiddleware):
                 data["db_user"] = db_user
 
             try:
+                # Вся работа хендлера с session завершается одной транзакцией.
                 response = await handler(event, data)
                 await session.commit()
                 return response
             except Exception as e:
                 await session.rollback()
-                logger.error(f"Ошибка в middleware: {e}")
+                logger.error("Ошибка в middleware: %s", e)
                 raise

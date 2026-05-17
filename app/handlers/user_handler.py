@@ -10,7 +10,7 @@ from app.database.orm_queries.orm_query_category import orm_delete_category, orm
 from app.keyboards.category_kb.basic_kb import all_category_keyboard
 from app.keyboards.category_kb.inline_kb import add_category_inline_keyboard, get_category_inline_keyboard
 from aiogram.fsm.context import FSMContext
-from app.states.form_category_state import FSMFillFormCategoryState
+from app.states.forms_state import FSMFillFormCategoryState
 from app.database.models import User
 from app.database.orm_queries.orm_query_category import orm_add_categories
 from app.keyboards.common_kb import common_btns
