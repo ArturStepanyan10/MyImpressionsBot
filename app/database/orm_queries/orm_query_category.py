@@ -1,7 +1,7 @@
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.models import Category
+from app.database.models import Category
 
 
 async def orm_get_all_categories(session: AsyncSession):
@@ -12,7 +12,7 @@ async def orm_get_all_categories(session: AsyncSession):
 
 async def orm_add_categories(session: AsyncSession, data: dict):
     obj = Category(title=data.get("title"), user_id=data.get("user_id"))
-    
+
     # Сохраняем категорию в БД (commit происходит в middleware)
     session.add(obj)
 

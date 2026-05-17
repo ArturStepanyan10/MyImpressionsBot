@@ -6,10 +6,10 @@ from aiogram.fsm.storage.redis import RedisStorage
 from redis.asyncio import Redis
 
 from config.config import Config, load_config
-from database.engine import create_db, drop_db, session_maker
-from handlers import user_handler
+from app.database.engine import create_db, drop_db, session_maker
+from app.handlers import user_handler
 from logger.logging import setup_logging
-from middlewares.db_middleware import DatabaseSessionUserMiddleware
+from app.middlewares.db_middleware import DatabaseSessionUserMiddleware
 from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties
 

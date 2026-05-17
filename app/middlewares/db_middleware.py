@@ -6,7 +6,7 @@ from aiogram.types import TelegramObject
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from database.models import User
+from app.database.models import User
 from logger.logging import setup_logging
 
 setup_logging()

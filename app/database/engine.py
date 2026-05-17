@@ -1,7 +1,7 @@
 from environs import Env
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from database.models import Base
+from app.database.models import Base
 
 env: Env = Env()
 env.read_env()
