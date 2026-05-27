@@ -7,8 +7,11 @@ from sqlalchemy import (
     String,
     Text,
     func,
+    Enum as SqlEnum,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+from app.core.enums import ItemStatus
 
 
 class Base(DeclarativeBase):
@@ -44,6 +47,11 @@ class Item(Base):
     image_url: Mapped[str] = mapped_column(Text)
     category_id: Mapped[int] = mapped_column(
         ForeignKey("category.id", ondelete="CASCADE"), nullable=False
+    )
+    status: Mapped[ItemStatus] = mapped_column(
+        SqlEnum(ItemStatus),
+        default=ItemStatus.PLANNED,
+        nullable=False
     )
 
 
