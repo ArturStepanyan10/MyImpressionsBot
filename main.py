@@ -8,7 +8,7 @@ from aiogram.fsm.storage.redis import RedisStorage
 from redis.asyncio import Redis
 
 from app.database.engine import create_db, drop_db, session_maker
-from app.handlers import base_hndlrs, category_hndlrs
+from app.handlers import base_hndlrs, category_hndlrs, item_hndlrs
 from app.middlewares.db_middleware import DatabaseSessionUserMiddleware
 from config.config import Config, load_config
 from logger.logging import setup_logging
@@ -50,6 +50,7 @@ async def main():
 
         dp.include_router(base_hndlrs.router)
         dp.include_router(category_hndlrs.router)
+        dp.include_router(item_hndlrs.router)
 
         await bot.delete_webhook(drop_pending_updates=True)
         logger.info("Webhook удалён, запускаем polling")

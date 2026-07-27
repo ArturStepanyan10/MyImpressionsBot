@@ -39,7 +39,10 @@ async def process_list_category(message: Message, session: AsyncSession):
     if categories:
         await message.answer(
             text=CATEGORY_LEXICON_RU["list_marker"],
-            reply_markup=get_category_inline_keyboard(categories, CategoryAction.LIST),
+            reply_markup=get_category_inline_keyboard(
+                categories,
+                CategoryAction.LIST.value,
+            ),
         )
     else:
         await message.answer(
@@ -172,7 +175,7 @@ async def process_update_category_selection(
         return
 
     await state.update_data(cancel_keyboard="all_category")
-    
+
     # Сохраняем ID категории в состоянии для дальнейшего использования при обновлении
     await state.update_data(category_id=category_id)
 
