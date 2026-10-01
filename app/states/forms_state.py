@@ -13,3 +13,12 @@ class FSMFillFormCategoryState(StatesGroup):
     fill_update_title = (
         State()
     )  # Состояние ожидания ввода нового названия категории для изменения
+
+
+class FSMFillFormItemState(StatesGroup):
+    """Состояния формы добавления элемента категории."""
+
+    fill_title = State()
+    fill_review = State()
+    fill_rating = State()
+    fill_image_url = State()

@@ -168,7 +168,7 @@ async def process_update_category_selection(
 
     category_id = int(callback.data.split("_")[-1])
 
-    category = await service.validate_update_and_delete_process(
+    category = await service.get_owned_category(
         callback, category_id, db_user.id, session
     )
     if not category:
@@ -244,7 +244,7 @@ async def process_delete_category(
     """Срабатывает на инлайн кнопку удаления категории, удаляет категорию из базы данных и уведомляет пользователя."""
     category_id = int(callback.data.split("_")[-1])
 
-    category = await service.validate_update_and_delete_process(
+    category = await service.get_owned_category(
         callback, category_id, db_user.id, session
     )
     if not category:
