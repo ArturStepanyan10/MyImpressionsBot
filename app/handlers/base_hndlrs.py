@@ -3,13 +3,13 @@ import logging
 
 from aiogram import F, Router
 from aiogram.filters import CommandStart, StateFilter
+from aiogram.fsm.context import FSMContext
 from aiogram.types import ErrorEvent, Message
 
 from app.database.models import User
 from app.keyboards.category_kb.basic_kb import all_category_keyboard
 from app.lexicon.lexicon import LEXICON_RU
 from app.services.error_service import ErrorService
-from aiogram.fsm.context import FSMContext
 
 router = Router()
 logger = logging.getLogger("my_bot")
@@ -33,20 +33,20 @@ async def process_help_command(message: Message):
     """Обрабатывает команду /help."""
 
     await message.answer(LEXICON_RU.get("/help"))
-    
+
 
 @router.message(StateFilter("*"), F.text == "Отменить")
 async def process_cancel_command(message: Message, state: FSMContext):
     """Обрабатывает отмену текущего действия и очищает состояние FSM.
        Действует для любого состояния.
     """
-    
+
     data = await state.get_data()
-    
+
     # выбираем клавиатуру для ответа в зависимости от того, откуда была вызвана команда отмены
     keyboard_name = data.get("cancel_keyboard", "all_category")
     keyboard = CANCEL_KEYBOARDS.get(keyboard_name, all_category_keyboard)
-    
+
     await state.clear()
     await message.answer(text="Действие отменено 😕", reply_markup=keyboard)
 
