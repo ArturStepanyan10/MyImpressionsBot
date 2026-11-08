@@ -7,6 +7,8 @@ from sqlalchemy import (
     String,
     Text,
     func,
+)
+from sqlalchemy import (
     Enum as SqlEnum,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -49,9 +51,9 @@ class Item(Base):
         ForeignKey("category.id", ondelete="CASCADE"), nullable=False
     )
     status: Mapped[ItemStatus] = mapped_column(
-        SqlEnum(ItemStatus),
+        SqlEnum(ItemStatus, native_enum=False, length=20),
         default=ItemStatus.PLANNED,
-        nullable=False
+        nullable=False,
     )
 
 

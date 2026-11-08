@@ -4,11 +4,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.models import Category
 
 
-async def orm_get_all_categories(session: AsyncSession):
+async def orm_get_all_categories(session: AsyncSession, user_id: int | None = None):
     """
     Получает список всех категорий из базы данных.
     """
     query = select(Category)
+    if user_id is not None:
+        query = query.where(Category.user_id == user_id)
     result = await session.execute(query)
     return result.scalars().all()
 

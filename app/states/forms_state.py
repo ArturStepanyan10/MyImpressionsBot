@@ -22,3 +22,9 @@ class FSMFillFormItemState(StatesGroup):
     fill_review = State()
     fill_rating = State()
     fill_image_url = State()
+
+
+class FSMEditItemState(StatesGroup):
+    """Ожидание нового значения выбранного поля элемента."""
+
+    fill_value = State()

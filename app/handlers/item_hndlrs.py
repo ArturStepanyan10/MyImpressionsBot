@@ -1,5 +1,4 @@
 from html import escape
-from urllib.parse import urlparse
 
 from aiogram import F, Router
 from aiogram.filters import StateFilter
@@ -7,24 +6,39 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.enums import CategoryAction
 from app.database.models import Category, User
+from app.database.orm_queries.orm_query_category import orm_get_all_categories
 from app.database.orm_queries.orm_query_item import ORMQueryItem
+from app.handlers.item_action_hndlrs import router as item_action_router
 from app.keyboards.category_kb.basic_kb import all_category_keyboard
-from app.keyboards.common_kb import common_btns
-from app.keyboards.item_kb.inline_kb import (
-    get_item_actions_keyboard,
-    get_item_created_keyboard,
+from app.keyboards.category_kb.inline_kb import (
+    add_category_inline_keyboard,
+    get_category_inline_keyboard,
 )
-from app.lexicon.lexicon import ITEM_LEXICON_RU
+from app.keyboards.common_kb import common_btns
+from app.keyboards.item_kb.callbacks import (
+    ITEM_STATUS_FILTERS,
+    ItemDetailsCallback,
+    ItemListCallback,
+)
+from app.keyboards.item_kb.inline_kb import (
+    get_item_created_keyboard,
+    get_item_details_keyboard,
+)
+from app.lexicon.lexicon import CATEGORY_LEXICON_RU, ITEM_LEXICON_RU
 from app.services.category_services import CategoryService
+from app.services.item_services import (
+    clear_item_form,
+    get_callback_item,
+    is_http_url,
+    send_category_items,
+    send_item_card,
+)
 from app.states.forms_state import FSMFillFormItemState
 
 router = Router()
-
-
-def _is_http_url(value: str) -> bool:
-    parsed_url = urlparse(value)
-    return parsed_url.scheme in {"http", "https"} and bool(parsed_url.netloc)
+router.include_router(item_action_router)
 
 
 async def _get_owned_category_from_callback(
@@ -52,6 +66,7 @@ async def process_category_items(
     callback: CallbackQuery,
     session: AsyncSession,
     db_user: User,
+    state: FSMContext,
 ) -> None:
     """Показывает список элементов выбранной категории пользователя."""
 
@@ -62,35 +77,78 @@ async def process_category_items(
     )
     if category_data is None:
         return
-    category_id, category = category_data
-
-    item_queries = ORMQueryItem(
-        session=session,
-        category_id=category_id,
-        user_id=db_user.id,
-    )
-    items = await item_queries.get_all_items()
-
+    _, category = category_data
+    await clear_item_form(callback.message, state)
     await callback.answer()
+    await send_category_items(callback.message, session, category, db_user.id)
 
-    category_title = escape(category.title)
-    if not items:
-        await callback.message.answer(
-            ITEM_LEXICON_RU["list_empty"].format(category=category_title),
-            reply_markup=get_item_actions_keyboard(category_id),
-        )
+
+@router.callback_query(ItemListCallback.filter())
+async def process_filtered_category_items(
+    callback: CallbackQuery,
+    callback_data: ItemListCallback,
+    session: AsyncSession,
+    db_user: User,
+    state: FSMContext,
+) -> None:
+    """Фильтрация и возврат из карточки к прежнему списку."""
+
+    if callback_data.status not in ITEM_STATUS_FILTERS:
+        await callback.answer(ITEM_LEXICON_RU["invalid_filter"], show_alert=True)
         return
 
-    item_lines = []
-    for number, item in enumerate(items, start=1):
-        status = escape(item.status.value)
-        title = escape(item.title)
-        item_lines.append(f"{number}. <b>{title}</b> — {status} — {item.rating}/5")
+    category = await CategoryService.get_owned_category(
+        callback, callback_data.category_id, db_user.id, session
+    )
+    if category is None:
+        return
 
+    await clear_item_form(callback.message, state)
+    await callback.answer()
+    await send_category_items(
+        callback.message, session, category, db_user.id, callback_data.status
+    )
+
+
+@router.callback_query(ItemDetailsCallback.filter())
+async def process_item_details(
+    callback: CallbackQuery,
+    callback_data: ItemDetailsCallback,
+    session: AsyncSession,
+    db_user: User,
+    state: FSMContext,
+) -> None:
+    """Открывает карточку только из категории текущего пользователя."""
+
+    item = await get_callback_item(callback, callback_data, session, db_user.id)
+    if item is None:
+        return
+
+    await clear_item_form(callback.message, state)
+    await callback.answer()
+    await send_item_card(
+        callback.message,
+        item,
+        get_item_details_keyboard(item.category_id, item.id, callback_data.status),
+    )
+
+
+@router.callback_query(F.data == "item_categories")
+async def process_back_to_categories(
+    callback: CallbackQuery, session: AsyncSession, db_user: User, state: FSMContext
+) -> None:
+    """Возвращает из списка элементов к категориям пользователя."""
+
+    categories = await orm_get_all_categories(session, user_id=db_user.id)
+    await clear_item_form(callback.message, state)
+    await callback.answer()
     await callback.message.answer(
-        ITEM_LEXICON_RU["list_title"].format(category=category_title)
-        + "\n".join(item_lines),
-        reply_markup=get_item_actions_keyboard(category_id),
+        CATEGORY_LEXICON_RU["list_marker" if categories else "list_empty"],
+        reply_markup=(
+            get_category_inline_keyboard(categories, CategoryAction.LIST.value)
+            if categories
+            else add_category_inline_keyboard
+        ),
     )
 
 
@@ -184,7 +242,7 @@ async def process_item_image_url(
     """Проверяет ссылку и сохраняет новый элемент в базе данных."""
 
     image_url = message.text.strip() if message.text else ""
-    if not _is_http_url(image_url):
+    if not is_http_url(image_url):
         await message.answer(ITEM_LEXICON_RU["invalid_image_url"])
         return
 

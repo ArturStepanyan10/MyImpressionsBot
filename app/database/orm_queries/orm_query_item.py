@@ -35,7 +35,11 @@ class ORMQueryItem:
     async def get_all_items(self) -> list[Item]:
         """Возвращает все предметы из выбранной категории пользователя."""
 
-        query = select(Item).where(Item.category_id.in_(self._owned_category_ids()))
+        query = (
+            select(Item)
+            .where(Item.category_id.in_(self._owned_category_ids()))
+            .order_by(Item.id)
+        )
         result = await self.session.execute(query)
         return list(result.scalars().all())
 
@@ -121,9 +125,13 @@ class ORMQueryItem:
     async def get_items_by_status(self, status: ItemStatus) -> list[Item]:
         """Возвращает предметы выбранной категории с указанным статусом."""
 
-        query = select(Item).where(
-            Item.category_id.in_(self._owned_category_ids()),
-            Item.status == status,
+        query = (
+            select(Item)
+            .where(
+                Item.category_id.in_(self._owned_category_ids()),
+                Item.status == status,
+            )
+            .order_by(Item.id)
         )
         result = await self.session.execute(query)
         return list(result.scalars().all())

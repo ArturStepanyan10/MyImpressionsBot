@@ -63,6 +63,55 @@ CATEGORY_LEXICON_RU: dict[str, str] = {
 
 
 ITEM_LEXICON_RU: dict[str, str] = {
+    "back": "Назад",
+    "action_edit": "Изменить",
+    "action_status": "Изменить статус",
+    "action_delete": "Удалить",
+    "field_title": "Название",
+    "field_review": "Отзыв",
+    "field_rating": "Оценка",
+    "field_image_url": "URL изображения",
+    "edit_menu": "Что изменить в элементе <b>{title}</b>?",
+    "edit_title_prompt": "Введи новое название элемента (от 1 до 255 символов).",
+    "edit_review_prompt": "Напиши новый отзыв или описание элемента.",
+    "edit_rating_prompt": "Введи новую оценку от 1 до 5.",
+    "edit_image_url_prompt": "Отправь новую ссылку на изображение (http:// или https://).",
+    "edit_success": "Изменения сохранены! ✅",
+    "edit_cancelled": "Редактирование отменено.",
+    "edit_expired": "Данные редактирования потеряны. Открой карточку заново.",
+    "form_cancelled": "Ввод отменён.",
+    "invalid_action": "Это действие недоступно. Открой карточку заново.",
+    "status_menu": "Выбери статус для элемента <b>{title}</b>.",
+    "status_success": "Статус изменён! ✅",
+    "delete_prompt": "Удалить элемент <b>{title}</b>? Это действие нельзя отменить.",
+    "delete_confirm": "Да, удалить",
+    "delete_cancel": "Нет, вернуться",
+    "delete_success": "Элемент удалён! ✅",
+    "add_item": "Добавить элемент",
+    "add_another": "Добавить ещё",
+    "back_to_items": "Вернуться к элементам",
+    "back_to_categories": "Назад к категориям",
+    "item_button": "{title} · {rating}/5 · {status}",
+    "filter_all": "Все",
+    "filter_planned": "Запланировано",
+    "filter_progress": "В процессе",
+    "filter_completed": "Выполнено",
+    "filter_empty": (
+        "В категории <b>{category}</b> нет элементов "
+        "с фильтром «{status}»."
+    ),
+    "list_filtered": "Элементы категории <b>{category}</b> · {status}",
+    "item_unavailable": "Элемент больше недоступен. Вернись к списку элементов.",
+    "invalid_filter": "Этот фильтр недоступен. Открой категорию заново.",
+    "card": (
+        "<b>{title}</b>\n\n"
+        "Оценка: <b>{rating}/5</b>\n"
+        "Статус: <b>{status}</b>\n"
+        "Дата создания: {created_at}\n\n"
+        "<b>Отзыв:</b>\n"
+    ),
+    "review_empty": "Отзыв не указан.",
+    "image_link": 'Изображение не удалось загрузить. <a href="{url}">Открыть изображение</a>',
     "list_empty": "В категории <b>{category}</b> пока нет элементов.",
     "list_title": "Элементы категории <b>{category}</b>:\n\n",
     "add_title_prompt": "Введи название элемента",
