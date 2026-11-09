@@ -12,7 +12,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.enums import ItemStatus
-from app.database.orm_queries.orm_query_item import ORMQueryItem
+from app.database.orm_queries.orm_query_item import ITEMS_PER_PAGE, ORMQueryItem
 from app.handlers.item_action_hndlrs import (
     process_item_action,
     process_item_edit_field,
@@ -22,6 +22,7 @@ from app.handlers.item_action_hndlrs import (
 from app.keyboards.item_kb.callbacks import (
     ItemActionCallback,
     ItemEditFieldCallback,
+    ItemListCallback,
     ItemSetStatusCallback,
 )
 
@@ -111,6 +112,7 @@ class ItemPostgresTests(unittest.IsolatedAsyncioTestCase):
                         )
                         self.assertEqual(stored_status, "IN_PROGRESS")
                         await self.check_card_actions(session, queries, item.id)
+                        await self.check_pagination(connection, queries)
                 finally:
                     await transaction.rollback()
         finally:
@@ -133,7 +135,7 @@ class ItemPostgresTests(unittest.IsolatedAsyncioTestCase):
         )
         callback = SimpleNamespace(answer=AsyncMock(), message=message)
         user = SimpleNamespace(id=1)
-        context = {"category_id": 1, "item_id": item_id, "status": "planned"}
+        context = {"category_id": 1, "item_id": item_id, "status": "planned", "page": 2}
         try:
             for field, value, expected in (
                 ("title", "Updated", "Updated"),
@@ -153,11 +155,17 @@ class ItemPostgresTests(unittest.IsolatedAsyncioTestCase):
                         user,
                         state,
                     )
+                    self.assertEqual((await state.get_data())["list_page"], 2)
                     message.text = value
                     await process_item_edit_value(message, state, session, user)
                     item = await queries.get_item_by_id(item_id)
                     self.assertEqual(getattr(item, field), expected)
                     self.assertIsNone(await state.get_state())
+                    keyboard = message.answer.call_args.kwargs["reply_markup"]
+                    back = ItemListCallback.unpack(
+                        keyboard.inline_keyboard[-1][0].callback_data
+                    )
+                    self.assertEqual((back.page, back.status), (2, "planned"))
             for key, status in (
                 ("planned", ItemStatus.PLANNED),
                 ("progress", ItemStatus.IN_PROGRESS),
@@ -191,6 +199,34 @@ class ItemPostgresTests(unittest.IsolatedAsyncioTestCase):
         finally:
             await state.clear()
             await storage.close()
+
+    async def check_pagination(self, connection, queries):
+        await connection.execute(
+            text(
+                "INSERT INTO pg_temp.item (title, category_id, status) "
+                "SELECT 'Page item ' || number, 1, "
+                "CASE WHEN number % 2 = 0 THEN 'COMPLETED' ELSE 'PLANNED' END "
+                "FROM generate_series(1, 25) AS number"
+            )
+        )
+        all_items = await queries.get_all_items()
+        self.assertEqual(len(all_items), 28)
+        for status in (None, *ItemStatus):
+            expected = [
+                item.id for item in all_items if status is None or item.status == status
+            ]
+            pages = max(1, (len(expected) + ITEMS_PER_PAGE - 1) // ITEMS_PER_PAGE)
+            for requested_page in (0, 1, 2, 999):
+                with self.subTest(status=status, page=requested_page):
+                    items, page, total_pages = await queries.get_items_page(
+                        requested_page, status
+                    )
+                    self.assertEqual(total_pages, pages)
+                    self.assertEqual(page, min(requested_page, pages - 1))
+                    self.assertEqual(
+                        [item.id for item in items],
+                        expected[page * ITEMS_PER_PAGE : (page + 1) * ITEMS_PER_PAGE],
+                    )
 
 
 if __name__ == "__main__":

@@ -1,11 +1,13 @@
 from collections.abc import Mapping
 from typing import Any
 
-from sqlalchemy import delete, select, update
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.enums import ItemStatus
 from app.database.models import Category, Item
+
+ITEMS_PER_PAGE = 10
 
 
 class ORMQueryItem:
@@ -42,6 +44,32 @@ class ORMQueryItem:
         )
         result = await self.session.execute(query)
         return list(result.scalars().all())
+
+    async def get_items_page(
+        self,
+        page: int = 0,
+        status: ItemStatus | None = None,
+    ) -> tuple[list[Item], int, int]:
+        """Возвращает элементы, актуальный номер страницы и число страниц."""
+
+        conditions = [Item.category_id.in_(self._owned_category_ids())]
+        if status is not None:
+            conditions.append(Item.status == status)
+        count_result = await self.session.execute(
+            select(func.count()).select_from(Item).where(*conditions)
+        )
+        total = count_result.scalar_one()
+        total_pages = max(1, (total + ITEMS_PER_PAGE - 1) // ITEMS_PER_PAGE)
+        # Старые кнопки могут указывать на страницу, исчезнувшую после удаления.
+        page = min(max(0, page), total_pages - 1)
+        result = await self.session.execute(
+            select(Item)
+            .where(*conditions)
+            .order_by(Item.id)
+            .limit(ITEMS_PER_PAGE)
+            .offset(page * ITEMS_PER_PAGE)
+        )
+        return list(result.scalars().all()), page, total_pages
 
     async def get_item_by_id(self, item_id: int) -> Item | None:
         """Возвращает предмет только из принадлежащей пользователю категории."""

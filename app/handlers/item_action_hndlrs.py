@@ -69,7 +69,12 @@ async def process_item_action(
             return
         await callback.answer(ITEM_LEXICON_RU["delete_success"])
         await send_category_items(
-            callback.message, session, category, db_user.id, callback_data.status
+            callback.message,
+            session,
+            category,
+            db_user.id,
+            callback_data.status,
+            callback_data.page,
         )
         return
 
@@ -110,6 +115,7 @@ async def process_item_edit_field(
             "item_id": item.id,
             "field": callback_data.field,
             "list_status": callback_data.status,
+            "list_page": callback_data.page,
             "cancel_keyboard": "item_card",
         }
     )
@@ -136,6 +142,8 @@ async def process_item_edit_value(
         not required.issubset(data)
         or data["field"] not in EDITABLE_ITEM_FIELDS
         or data.get("list_status", "all") not in ITEM_STATUS_FILTERS
+        or not isinstance(data.get("list_page", 0), int)
+        or not 0 <= data.get("list_page", 0) <= 2_147_483_647
     ):
         await state.clear()
         await message.answer(
@@ -164,7 +172,10 @@ async def process_item_edit_value(
         message,
         item,
         get_item_details_keyboard(
-            item.category_id, item.id, data.get("list_status", "all")
+            item.category_id,
+            item.id,
+            data.get("list_status", "all"),
+            data.get("list_page", 0),
         ),
     )
 
@@ -197,5 +208,7 @@ async def process_item_set_status(
     await send_item_card(
         callback.message,
         item,
-        get_item_details_keyboard(item.category_id, item.id, callback_data.status),
+        get_item_details_keyboard(
+            item.category_id, item.id, callback_data.status, callback_data.page
+        ),
     )

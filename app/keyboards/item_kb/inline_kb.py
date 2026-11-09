@@ -17,6 +17,8 @@ def get_item_list_keyboard(
     category_id: int,
     items: list[Item],
     status: str = "all",
+    page: int = 0,
+    total_pages: int = 1,
 ) -> InlineKeyboardMarkup:
     """Список элементов, фильтры и переходы внутри категории."""
 
@@ -29,12 +31,25 @@ def get_item_list_keyboard(
                     status=item.status.value,
                 ),
                 callback_data=ItemDetailsCallback(
-                    category_id=category_id, item_id=item.id, status=status
+                    category_id=category_id, item_id=item.id, status=status, page=page
                 ).pack(),
             )
         ]
         for item in items
     ]
+    navigation = []
+    for target_page, label in ((page - 1, "previous_page"), (page + 1, "next_page")):
+        if 0 <= target_page < total_pages:
+            navigation.append(
+                InlineKeyboardButton(
+                    text=ITEM_LEXICON_RU[label],
+                    callback_data=ItemListCallback(
+                        category_id=category_id, status=status, page=target_page
+                    ).pack(),
+                )
+            )
+    if navigation:
+        rows.append(navigation)
     filters = [
         InlineKeyboardButton(
             text=("✓ " if key == status else "") + ITEM_LEXICON_RU[f"filter_{key}"],
@@ -48,7 +63,7 @@ def get_item_list_keyboard(
 
 
 def get_item_details_keyboard(
-    category_id: int, item_id: int, status: str = "all"
+    category_id: int, item_id: int, status: str = "all", page: int = 0
 ) -> InlineKeyboardMarkup:
     """Действия с элементом и возврат к списку с выбранным фильтром."""
 
@@ -61,6 +76,7 @@ def get_item_details_keyboard(
                         category_id=category_id,
                         item_id=item_id,
                         status=status,
+                        page=page,
                         action=action,
                     ).pack(),
                 )
@@ -72,7 +88,7 @@ def get_item_details_keyboard(
                 InlineKeyboardButton(
                     text=ITEM_LEXICON_RU["back"],
                     callback_data=ItemListCallback(
-                        category_id=category_id, status=status
+                        category_id=category_id, status=status, page=page
                     ).pack(),
                 )
             ]
@@ -92,6 +108,7 @@ def get_item_edit_keyboard(data: ItemDetailsCallback) -> InlineKeyboardMarkup:
                         category_id=data.category_id,
                         item_id=data.item_id,
                         status=data.status,
+                        page=data.page,
                         field=field,
                     ).pack(),
                 )
@@ -117,6 +134,7 @@ def get_item_status_keyboard(
                         category_id=data.category_id,
                         item_id=data.item_id,
                         status=data.status,
+                        page=data.page,
                         new_status=key,
                     ).pack(),
                 )
@@ -140,6 +158,7 @@ def get_item_delete_keyboard(data: ItemDetailsCallback) -> InlineKeyboardMarkup:
                         category_id=data.category_id,
                         item_id=data.item_id,
                         status=data.status,
+                        page=data.page,
                         action="confirm_delete",
                     ).pack(),
                 )
@@ -155,7 +174,10 @@ def _back_to_card_button(
     return InlineKeyboardButton(
         text=text,
         callback_data=ItemDetailsCallback(
-            category_id=data.category_id, item_id=data.item_id, status=data.status
+            category_id=data.category_id,
+            item_id=data.item_id,
+            status=data.status,
+            page=data.page,
         ).pack(),
     )
 

@@ -63,6 +63,9 @@ CATEGORY_LEXICON_RU: dict[str, str] = {
 
 
 ITEM_LEXICON_RU: dict[str, str] = {
+    "previous_page": "⬅️ Предыдущая",
+    "next_page": "Следующая ➡️",
+    "page_number": "Страница {page} из {total_pages}",
     "back": "Назад",
     "action_edit": "Изменить",
     "action_status": "Изменить статус",

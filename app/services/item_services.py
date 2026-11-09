@@ -94,7 +94,9 @@ async def cancel_item_edit(
     await send_item_card(
         message,
         item,
-        get_item_details_keyboard(item.category_id, item.id, status),
+        get_item_details_keyboard(
+            item.category_id, item.id, status, data.get("list_page", 0)
+        ),
     )
 
 
@@ -104,16 +106,13 @@ async def send_category_items(
     category: Category,
     user_id: int,
     status: str = "all",
+    page: int = 0,
 ) -> None:
     """Выводит список, в том числе после удаления элемента."""
 
     queries = ORMQueryItem(session, category.id, user_id)
     status_filter = ITEM_STATUS_FILTERS[status]
-    items = (
-        await queries.get_all_items()
-        if status_filter is None
-        else await queries.get_items_by_status(status_filter)
-    )
+    items, page, total_pages = await queries.get_items_page(page, status_filter)
     category_title = escape(category.title)
     if status == "all":
         text = ITEM_LEXICON_RU["list_title" if items else "list_empty"].format(
@@ -124,8 +123,16 @@ async def send_category_items(
             category=category_title,
             status=ITEM_LEXICON_RU[f"filter_{status}"],
         )
+    text = (
+        text.rstrip()
+        + "\n\n"
+        + ITEM_LEXICON_RU["page_number"].format(page=page + 1, total_pages=total_pages)
+    )
     await message.answer(
-        text, reply_markup=get_item_list_keyboard(category.id, items, status)
+        text,
+        reply_markup=get_item_list_keyboard(
+            category.id, items, status, page, total_pages
+        ),
     )
 
 

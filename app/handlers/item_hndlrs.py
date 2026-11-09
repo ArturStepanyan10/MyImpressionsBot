@@ -106,7 +106,12 @@ async def process_filtered_category_items(
     await clear_item_form(callback.message, state)
     await callback.answer()
     await send_category_items(
-        callback.message, session, category, db_user.id, callback_data.status
+        callback.message,
+        session,
+        category,
+        db_user.id,
+        callback_data.status,
+        callback_data.page,
     )
 
 
@@ -129,7 +134,9 @@ async def process_item_details(
     await send_item_card(
         callback.message,
         item,
-        get_item_details_keyboard(item.category_id, item.id, callback_data.status),
+        get_item_details_keyboard(
+            item.category_id, item.id, callback_data.status, callback_data.page
+        ),
     )
 
 
