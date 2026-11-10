@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.models import User
 from app.keyboards.category_kb.basic_kb import all_category_keyboard
+from app.keyboards.common_kb import common_btns
 from app.lexicon.lexicon import LEXICON_RU
 from app.services.error_service import ErrorService
 from app.services.item_services import cancel_item_edit
@@ -21,9 +22,10 @@ CANCEL_KEYBOARDS = {
 
 
 @router.message(CommandStart())
-async def process_start_command(message: Message, db_user: User):
+async def process_start_command(message: Message, db_user: User, state: FSMContext):
     """Обрабатывает команду /start."""
 
+    await state.clear()
     await message.answer(
         f"Приветствую тебя, дорогой {db_user.name}! 👋 \n\n{LEXICON_RU.get('/start')}",
         reply_markup=all_category_keyboard,
@@ -31,10 +33,15 @@ async def process_start_command(message: Message, db_user: User):
 
 
 @router.message(F.text == "/help")
-async def process_help_command(message: Message):
+async def process_help_command(message: Message, state: FSMContext):
     """Обрабатывает команду /help."""
 
-    await message.answer(LEXICON_RU.get("/help"))
+    keyboard = (
+        common_btns["cancel"]
+        if await state.get_state() is not None
+        else all_category_keyboard
+    )
+    await message.answer(LEXICON_RU.get("/help"), reply_markup=keyboard)
 
 
 @router.message(StateFilter("*"), F.text == "Отменить")

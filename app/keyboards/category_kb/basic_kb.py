@@ -18,4 +18,5 @@ keyboard = [
 all_category_keyboard = ReplyKeyboardMarkup(
     keyboard=keyboard,
     resize_keyboard=True,
+    is_persistent=True,
 )
